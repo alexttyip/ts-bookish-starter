@@ -3,34 +3,38 @@ import { Request as SqlRequest, Connection } from 'tedious';
 
 const router = Router();
 
-const config = {
-    server: 'localhost',
-    options: {
-        trustServerCertificate: true,
-        database: 'bookish',
-    },
-    authentication: {
-        type: 'default',
+function makeDBConnection() {
+    const config = {
+        server: 'localhost',
         options: {
-            userName: 'SA',
-            password: 'Abcd1234?',
+            trustServerCertificate: true,
+            database: 'bookish',
         },
-    },
-};
+        authentication: {
+            type: 'default',
+            options: {
+                userName: 'SA',
+                password: 'Abcd1234?',
+            },
+        },
+    };
 
-const connection = new Connection(config);
+    const connection = new Connection(config);
 
-connection.on('connect', function (err) {
-    if (err) {
-        console.log('Error: ', err);
-    } else {
-        console.log('HOORAY!');
-    }
-    // If no error, then good to go...
-});
+    connection.on('connect', function (err) {
+        if (err) {
+            console.log('Error: ', err);
+        } else {
+            console.log('HOORAY!');
+        }
+        // If no error, then good to go...
+    });
 
-// Initialize the connection.
-connection.connect();
+    connection.connect();
+    return connection;
+}
+
+const connection = makeDBConnection();
 
 class Book {
     constructor(isbn: string, name: string) {
@@ -88,11 +92,21 @@ router.get('/', function getAll(req: Request, res: Response) {
 });
 
 router.post('/', function createBook(req: Request, res: Response) {
-    // TODO: implement functionality
-    return res.status(500).json({
-        error: 'server_error',
-        error_description: 'Endpoint not implemented yet.',
-    });
+    const bookData = req.body;
+    console.log(bookData);
+    const request = new SqlRequest(
+        `INSERT INTO book VALUES ('${bookData.isbn}', '${bookData.name}')`,
+        (err, rowCount, rows) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err.body);
+            } else {
+                return res.status(201).json(rows);
+            }
+        },
+    );
+
+    connection.execSql(request);
 });
 
 export default router;
