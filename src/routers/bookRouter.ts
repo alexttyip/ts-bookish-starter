@@ -3,7 +3,7 @@ import { Request as SqlRequest, Connection } from 'tedious';
 
 const router = Router();
 
-function makeDBConnection() {
+function createDBConnection() {
     const config = {
         server: 'localhost',
         options: {
@@ -27,14 +27,13 @@ function makeDBConnection() {
         } else {
             console.log('HOORAY!');
         }
-        // If no error, then good to go...
     });
 
     connection.connect();
     return connection;
 }
 
-const connection = makeDBConnection();
+const connection = createDBConnection();
 
 class Book {
     constructor(isbn: string, name: string) {
@@ -61,7 +60,6 @@ router.get('/:id', function getBook(req: Request, res: Response) {
     );
 
     request.on('row', function (columns) {
-        console.log(columns);
         return res.status(200).json(getBookFromDatabaseRow(columns));
     });
 
@@ -84,7 +82,6 @@ router.get('/', function getAll(req: Request, res: Response) {
     });
 
     request.on('row', function (columns) {
-        console.log(columns);
         books.push(getBookFromDatabaseRow(columns));
     });
 
@@ -93,7 +90,7 @@ router.get('/', function getAll(req: Request, res: Response) {
 
 router.post('/', function createBook(req: Request, res: Response) {
     const bookData = req.body;
-    console.log(bookData);
+
     const request = new SqlRequest(
         `INSERT INTO book VALUES ('${bookData.isbn}', '${bookData.name}')`,
         (err, rowCount, rows) => {
