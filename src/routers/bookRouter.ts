@@ -51,7 +51,7 @@ router.get('/:id', function getBook(req: Request, res: Response) {
     const id = req.params.id;
 
     const request = new SqlRequest(
-        `select * from book where isbn='${id}'`,
+        `select book.isbn, book.title, string_agg(author.name, ', ') from book LEFT JOIN book_author ON book.isbn = book_author.isbn LEFT JOIN author ON book_author.author_id = author.id where book.isbn='9780141346113' GROUP BY book.isbn, book.title`,
         (err, rowCount) => {
             if (err) {
                 console.log(err);
