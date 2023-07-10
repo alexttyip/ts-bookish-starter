@@ -36,13 +36,15 @@ function createDBConnection() {
 const connection = createDBConnection();
 
 class Book {
-    constructor(isbn: string, name: string) {
+    constructor(isbn: string, name: string, author: string) {
         this.isbn = isbn;
         this.name = name;
+        this.author = author;
     }
 
     isbn: string;
     name: string;
+    author: string;
 }
 
 router.get('/:id', function getBook(req: Request, res: Response) {
@@ -67,19 +69,22 @@ router.get('/:id', function getBook(req: Request, res: Response) {
 });
 
 function getBookFromDatabaseRow(row) {
-    return new Book(row[0].value, row[1].value);
+    return new Book(row[0].value, row[1].value, row[2].value);
 }
 
 router.get('/', function getAll(req: Request, res: Response) {
     const books: Book[] = [];
-    const request = new SqlRequest('select * from book', (err, rowCount) => {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log(rowCount + ' rows');
-            return res.status(200).json(books);
-        }
-    });
+    const request = new SqlRequest(
+        `SELECT book.isbn, book.title, string_agg(author.name, ', ') FROM book LEFT JOIN book_author ON book.isbn = book_author.isbn LEFT JOIN author ON book_author.author_id = author.id GROUP BY book.isbn, book.title`,
+        (err, rowCount) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(rowCount + ' rows');
+                return res.status(200).json(books);
+            }
+        },
+    );
 
     request.on('row', function (columns) {
         books.push(getBookFromDatabaseRow(columns));
