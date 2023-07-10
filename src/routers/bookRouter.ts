@@ -88,6 +88,8 @@ router.get('/', function getAll(req: Request, res: Response) {
     connection.execSql(request);
 });
 
+// asdhuigfhuiavasdjhkdasbkasdjhkasdbjhk
+
 router.post('/', function createBook(req: Request, res: Response) {
     const bookData = req.body;
 
